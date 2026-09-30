@@ -120,7 +120,70 @@ export class DbEngine {
   public resetToFactory(): void {
     this.state = JSON.parse(JSON.stringify(INITIAL_DATABASE));
     this.saveDatabase();
-    this.writeAuditLog('SISTEM', 'RESET_FACTORY', 'ALL', 'Reset database ke setelan awal', null, null);
+    this.writeAuditLog('SISTEM', 'RESET_FACTORY', 'ALL', 'Reset database ke data bawaan awal (demo)', null, null);
+    this.notify();
+  }
+
+  /**
+   * Reset Bersih Total ke 0:
+   * Mengosongkan transaksi keuangan (pembayaran, pengeluaran, tagihan, kas),
+   * serta opsional santri, kelas, tarif, jenjang sehingga benar-benar bersih 0 siap pakai.
+   */
+  public resetToZero(options: { 
+    clearSantri?: boolean; 
+    clearKelasDanTarif?: boolean;
+  } = { clearSantri: true, clearKelasDanTarif: false }): void {
+    const freshUsers = JSON.parse(JSON.stringify(INITIAL_DATABASE.USERS));
+    const freshPengaturan = JSON.parse(JSON.stringify(INITIAL_DATABASE.PENGATURAN));
+    const freshTahunAjaran = JSON.parse(JSON.stringify(INITIAL_DATABASE.TAHUN_AJARAN));
+    const freshKategoriPengeluaran = JSON.parse(JSON.stringify(INITIAL_DATABASE.KATEGORI_PENGELUARAN));
+
+    // Selalu kosongkan transaksi keuangan & pembukuan ke 0
+    this.state.TAGIHAN = [];
+    this.state.PEMBAYARAN = [];
+    this.state.PENGELUARAN = [];
+    this.state.DOKUMEN = [];
+    this.state.PENUTUPAN_PERIODE = [];
+    this.state.LOG_AKTIVITAS = [];
+
+    // Jika santri dikosongkan
+    if (options.clearSantri) {
+      this.state.SANTRI = [];
+      this.state.RIWAYAT_KELAS = [];
+    }
+
+    // Jika kelas, jenjang, tarif tagihan juga dikosongkan
+    if (options.clearKelasDanTarif) {
+      this.state.JENJANG = [];
+      this.state.KELAS = [];
+      this.state.JENIS_TAGIHAN = [];
+      this.state.TARIF_TAGIHAN = [];
+    }
+
+    // Pastikan user admin dan pengaturan tetap ada
+    if (!this.state.USERS || this.state.USERS.length === 0) {
+      this.state.USERS = freshUsers;
+    }
+    if (!this.state.TAHUN_AJARAN || this.state.TAHUN_AJARAN.length === 0) {
+      this.state.TAHUN_AJARAN = freshTahunAjaran;
+    }
+    if (!this.state.KATEGORI_PENGELUARAN || this.state.KATEGORI_PENGELUARAN.length === 0) {
+      this.state.KATEGORI_PENGELUARAN = freshKategoriPengeluaran;
+    }
+    if (!this.state.PENGATURAN || this.state.PENGATURAN.length === 0) {
+      this.state.PENGATURAN = freshPengaturan;
+    }
+
+    this.saveDatabase();
+    this.writeAuditLog(
+      'SISTEM',
+      'RESET_ZERO',
+      'ALL',
+      `Database berhasil direset bersih ke 0 dengan otentikasi sandi kabid (Santri: ${options.clearSantri ? 'Dikosongkan' : 'Dipertahankan'}, Kelas/Tarif: ${options.clearKelasDanTarif ? 'Dikosongkan' : 'Dipertahankan'})`,
+      null,
+      null
+    );
+    this.notify();
   }
 
   public getState(): DatabaseState {
