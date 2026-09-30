@@ -1,0 +1,7 @@
+{
+  "name": "Keuangan Pesantren Inayatul Muhajirin",
+  "description": "Sistem Informasi Manajemen Keuangan Pondok Pesantren Inayatul Muhajirin berbasis 16 sheet blueprint terpadu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
